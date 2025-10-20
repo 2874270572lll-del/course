@@ -1,0 +1,37 @@
+package com.zjgsu.lll.course.service;
+
+import com.zjgsu.lll.course.model.Course;
+import com.zjgsu.lll.course.repository.CourseRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.UUID;
+
+@Service
+public class CourseService {
+    private final CourseRepository courseRepository;
+
+    public CourseService(CourseRepository courseRepository) {
+        this.courseRepository = courseRepository;
+    }
+
+    public List<Course> getAllCourses() { return courseRepository.findAll(); }
+
+    public Course getCourseById(String id) {
+        return courseRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+    }
+
+    public Course createCourse(Course course) {
+        course.setId(UUID.randomUUID().toString());
+        return courseRepository.save(course);
+    }
+
+    public Course updateCourse(String id, Course updated) {
+        Course existing = getCourseById(id);
+        updated.setId(existing.getId());
+        return courseRepository.save(updated);
+    }
+
+    public void deleteCourse(String id) { courseRepository.delete(id); }
+}
