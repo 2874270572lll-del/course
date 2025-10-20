@@ -1,0 +1,45 @@
+package com.zjgsu.lll.course.repository;
+
+import com.zjgsu.lll.course.model.Enrollment;
+import org.springframework.stereotype.Repository;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
+@Repository
+public class EnrollmentRepository {
+    private final Map<String, Enrollment> enrollments = new ConcurrentHashMap<>();
+
+    public List<Enrollment> findAll() {
+        return new ArrayList<>(enrollments.values());
+    }
+
+    public Optional<Enrollment> findById(String id) {  // 添加这个方法
+        return Optional.ofNullable(enrollments.get(id));
+    }
+
+    public List<Enrollment> findByCourseId(String courseId) {
+        return enrollments.values().stream()
+                .filter(e -> e.getCourseId().equals(courseId))
+                .collect(Collectors.toList());
+    }
+
+    public List<Enrollment> findByStudentId(String studentId) {
+        return enrollments.values().stream()
+                .filter(e -> e.getStudentId().equals(studentId))
+                .collect(Collectors.toList());
+    }
+
+    public Enrollment save(Enrollment e) {
+        enrollments.put(e.getId(), e);
+        return e;
+    }
+
+    public void delete(String id) {
+        enrollments.remove(id);
+    }
+}
