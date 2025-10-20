@@ -1,0 +1,46 @@
+package com.zjgsu.lll.course.controller;
+
+import com.zjgsu.lll.course.common.ApiResponse;
+import com.zjgsu.lll.course.model.Course;
+import com.zjgsu.lll.course.service.CourseService;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/courses")
+public class CourseController {
+    private final CourseService service;
+
+    public CourseController(CourseService service) {
+        this.service = service;
+    }
+
+    @GetMapping
+    public ApiResponse<List<Course>> all() {
+        return ApiResponse.success(service.getAllCourses());
+    }
+
+    @GetMapping("/{id}")
+    public ApiResponse<Course> byId(@PathVariable String id) {
+        return ApiResponse.success(service.getCourseById(id));
+    }
+
+    // 移除@Valid注解
+    @PostMapping
+    public ApiResponse<Course> create(@RequestBody Course c) {
+        return ApiResponse.success(service.createCourse(c));
+    }
+
+    // 移除@Valid注解
+    @PutMapping("/{id}")
+    public ApiResponse<Course> update(@PathVariable String id, @RequestBody Course c) {
+        return ApiResponse.success(service.updateCourse(id, c));
+    }
+
+    @DeleteMapping("/{id}")
+    public ApiResponse<Void> delete(@PathVariable String id) {
+        service.deleteCourse(id);
+        return ApiResponse.success(null);
+    }
+}
