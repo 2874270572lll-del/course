@@ -1,0 +1,156 @@
+package com.zjgsu.lll.course.repository;
+
+import com.zjgsu.lll.course.model.Course;
+import com.zjgsu.lll.course.model.Instructor;
+import com.zjgsu.lll.course.model.ScheduleSlot;
+import org.springframework.stereotype.Repository;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Repository
+public class CourseRepository {
+    private final Map<String, Course> courses = new ConcurrentHashMap<>();
+
+    public CourseRepository() {
+        // 初始化示例课程数据
+        initSampleData();
+    }
+
+    private void initSampleData() {
+        // 课程1: Java程序设计
+        Course course1 = new Course();
+        course1.setId("1");
+        course1.setCode("CS101");
+        course1.setTitle("计算机科学导论");
+
+        Instructor instructor1 = new Instructor();
+        instructor1.setId("T001");
+        instructor1.setName("张教授");
+        instructor1.setEmail("zhang@example.edu.cn");
+        course1.setInstructor(instructor1);
+
+        ScheduleSlot schedule1 = new ScheduleSlot();
+        schedule1.setDayOfWeek("MONDAY");
+        schedule1.setStartTime("08:00");
+        schedule1.setEndTime("10:00");
+        schedule1.setExpectedAttendance(50);
+        course1.setSchedule(schedule1);
+
+        course1.setCapacity(60);
+        course1.setEnrolled(0);
+        courses.put(course1.getId(), course1);
+
+        // 课程2: 数据结构
+        Course course2 = new Course();
+        course2.setId("2");
+        course2.setCode("CS102");
+        course2.setTitle("数据结构");
+
+        Instructor instructor2 = new Instructor();
+        instructor2.setId("T002");
+        instructor2.setName("李教授");
+        instructor2.setEmail("li@example.edu.cn");
+        course2.setInstructor(instructor2);
+
+        ScheduleSlot schedule2 = new ScheduleSlot();
+        schedule2.setDayOfWeek("TUESDAY");
+        schedule2.setStartTime("10:00");
+        schedule2.setEndTime("12:00");
+        schedule2.setExpectedAttendance(45);
+        course2.setSchedule(schedule2);
+
+        course2.setCapacity(50);
+        course2.setEnrolled(0);
+        courses.put(course2.getId(), course2);
+
+        // 课程3: 数据库原理
+        Course course3 = new Course();
+        course3.setId("3");
+        course3.setCode("CS201");
+        course3.setTitle("数据库原理");
+
+        Instructor instructor3 = new Instructor();
+        instructor3.setId("T003");
+        instructor3.setName("王教授");
+        instructor3.setEmail("wang@example.edu.cn");
+        course3.setInstructor(instructor3);
+
+        ScheduleSlot schedule3 = new ScheduleSlot();
+        schedule3.setDayOfWeek("WEDNESDAY");
+        schedule3.setStartTime("14:00");
+        schedule3.setEndTime("16:00");
+        schedule3.setExpectedAttendance(40);
+        course3.setSchedule(schedule3);
+
+        course3.setCapacity(45);
+        course3.setEnrolled(0);
+        courses.put(course3.getId(), course3);
+
+        // 课程4: Web开发技术
+        Course course4 = new Course();
+        course4.setId("4");
+        course4.setCode("CS301");
+        course4.setTitle("Web开发技术");
+
+        Instructor instructor4 = new Instructor();
+        instructor4.setId("T004");
+        instructor4.setName("赵教授");
+        instructor4.setEmail("zhao@example.edu.cn");
+        course4.setInstructor(instructor4);
+
+        ScheduleSlot schedule4 = new ScheduleSlot();
+        schedule4.setDayOfWeek("THURSDAY");
+        schedule4.setStartTime("16:00");
+        schedule4.setEndTime("18:00");
+        schedule4.setExpectedAttendance(35);
+        course4.setSchedule(schedule4);
+
+        course4.setCapacity(40);
+        course4.setEnrolled(0);
+        courses.put(course4.getId(), course4);
+
+        // 课程5: 软件工程（容量为2，用于测试）
+        Course course5 = new Course();
+        course5.setId("5");
+        course5.setCode("CS401");
+        course5.setTitle("软件工程");
+
+        Instructor instructor5 = new Instructor();
+        instructor5.setId("T005");
+        instructor5.setName("刘教授");
+        instructor5.setEmail("liu@example.edu.cn");
+        course5.setInstructor(instructor5);
+
+        ScheduleSlot schedule5 = new ScheduleSlot();
+        schedule5.setDayOfWeek("FRIDAY");
+        schedule5.setStartTime("09:00");
+        schedule5.setEndTime("11:00");
+        schedule5.setExpectedAttendance(30);
+        course5.setSchedule(schedule5);
+
+        course5.setCapacity(2); // 小容量，用于测试选课限制
+        course5.setEnrolled(0);
+        courses.put(course5.getId(), course5);
+    }
+
+    public List<Course> findAll() {
+        return new ArrayList<>(courses.values());
+    }
+
+    public Optional<Course> findById(String id) {
+        return Optional.ofNullable(courses.get(id));
+    }
+
+    public Course save(Course course) {
+        courses.put(course.getId(), course);
+        return course;
+    }
+
+    public void delete(String id) {
+        courses.remove(id);
+    }
+}
