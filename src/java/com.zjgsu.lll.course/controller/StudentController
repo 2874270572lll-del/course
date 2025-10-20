@@ -1,0 +1,39 @@
+package com.zjgsu.lll.course.controller;
+
+import com.zjgsu.lll.course.common.ApiResponse;
+import com.zjgsu.lll.course.model.Student;
+import com.zjgsu.lll.course.service.StudentService;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/students")  // 添加这一行！
+public class StudentController {
+    private final StudentService service;
+    public StudentController(StudentService service) { this.service = service; }
+
+    @GetMapping
+    public ApiResponse<List<Student>> all() { return ApiResponse.success(service.getAllStudents()); }
+
+    @GetMapping("/{id}")
+    public ApiResponse<Student> byId(@PathVariable String id) {
+        return ApiResponse.success(service.getById(id));
+    }
+
+    @PostMapping
+    public ApiResponse<Student> create(@RequestBody Student s) {
+        return ApiResponse.success(service.createStudent(s));
+    }
+
+    @PutMapping("/{id}")
+    public ApiResponse<Student> update(@PathVariable String id, @RequestBody Student s) {
+        return ApiResponse.success(service.updateStudent(id, s));
+    }
+
+    @DeleteMapping("/{id}")
+    public ApiResponse<Void> delete(@PathVariable String id) {
+        service.deleteStudent(id);
+        return ApiResponse.success(null);
+    }
+}
