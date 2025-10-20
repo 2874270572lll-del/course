@@ -1,0 +1,129 @@
+package com.zjgsu.lll.course;
+
+import com.zjgsu.lll.course.model.Course;
+import com.zjgsu.lll.course.model.Student;
+import com.zjgsu.lll.course.model.Enrollment;
+import com.zjgsu.lll.course.repository.CourseRepository;
+import com.zjgsu.lll.course.repository.StudentRepository;
+import com.zjgsu.lll.course.repository.EnrollmentRepository;
+import com.zjgsu.lll.course.service.EnrollmentService;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest
+class CourseApplicationTests {
+
+	// 注入实际的Repository和Service（集成测试使用真实组件）
+	@Autowired
+	private CourseRepository courseRepository;
+
+	@Autowired
+	private StudentRepository studentRepository;
+
+	@Autowired
+	private EnrollmentRepository enrollmentRepository;
+
+	@Autowired
+	private EnrollmentService enrollmentService;
+
+	/**
+	 * 测试应用上下文是否正常加载
+	 */
+	@Test
+	void contextLoads() {
+		// 若上下文加载失败，此测试会直接报错
+		assertNotNull(courseRepository);
+		assertNotNull(studentRepository);
+		assertNotNull(enrollmentService);
+	}
+
+	/**
+	 * 测试完整的选课流程（集成测试：从数据库存储到业务逻辑调用）
+	 * 使用@Transactional确保测试后数据回滚，不污染数据库
+	 */
+	@Transactional
+	@Test
+	void testFullEnrollmentFlow() {
+		// 1. 准备测试数据：创建课程
+		Course course = new Course();
+		course.setCode("TEST001");
+		course.setTitle("集成测试课程");
+		course.setCapacity(5); // 容量5人
+		course.setEnrolled(0); // 初始选课人数0
+		Course savedCourse = courseRepository.save(course);
+		assertNotNull(savedCourse.getId()); // 验证课程保存成功
+
+		// 2. 准备测试数据：创建学生
+		Student student = new Student();
+		student.setStudentId("TEST_STU_001");
+		student.setName("测试学生");
+		student.setEmail("test@stu.com");
+		student.setMajor("计算机科学");
+		student.setGrade(2024);
+		Student savedStudent = studentRepository.save(student);
+		assertNotNull(savedStudent.getId()); // 验证学生保存成功
+
+		// 3. 执行选课操作
+		Enrollment enrollment = enrollmentService.enroll(savedCourse.getId(), savedStudent.getStudentId());
+		assertNotNull(enrollment.getId()); // 验证选课记录生成
+		assertEquals(savedCourse.getId(), enrollment.getCourseId());
+		assertEquals(savedStudent.getStudentId(), enrollment.getStudentId());
+
+		// 4. 验证课程选课人数已更新
+		Course updatedCourse = courseRepository.findById(savedCourse.getId()).orElseThrow();
+		assertEquals(1, updatedCourse.getEnrolled()); // 选课人数从0变为1
+
+		// 5. 验证选课记录已存入数据库
+		long enrollmentCount = enrollmentRepository.countByCourseIdAndStudentId(
+				savedCourse.getId(), savedStudent.getStudentId()
+		);
+		assertEquals(1, enrollmentCount); // 数据库中存在1条选课记录
+	}
+
+	/**
+	 * 测试课程容量限制（集成测试：验证业务规则在真实环境中生效）
+	 */
+	@Transactional
+	@Test
+	void testCourseCapacityLimit() {
+		// 1. 创建一个容量为1的课程
+		Course course = new Course();
+		course.setCode("TEST002");
+		course.setTitle("容量测试课程");
+		course.setCapacity(1);
+		course.setEnrolled(0);
+		Course savedCourse = courseRepository.save(course);
+
+		// 2. 创建两个学生
+		Student student1 = studentRepository.save(createTestStudent("TEST_STU_002"));
+		Student student2 = studentRepository.save(createTestStudent("TEST_STU_003"));
+
+		// 3. 第一个学生选课成功
+		Enrollment enrollment1 = enrollmentService.enroll(savedCourse.getId(), student1.getStudentId());
+		assertNotNull(enrollment1);
+
+		// 4. 第二个学生选课应失败（课程已满）
+		assertThrows(RuntimeException.class, () -> {
+			enrollmentService.enroll(savedCourse.getId(), student2.getStudentId());
+		});
+
+		// 5. 验证课程最终只有1人选课
+		Course updatedCourse = courseRepository.findById(savedCourse.getId()).orElseThrow();
+		assertEquals(1, updatedCourse.getEnrolled());
+	}
+
+	// 辅助方法：创建测试学生
+	private Student createTestStudent(String studentId) {
+		Student student = new Student();
+		student.setStudentId(studentId);
+		student.setName("测试学生" + studentId);
+		student.setEmail(studentId + "@stu.com");
+		student.setMajor("软件工程");
+		student.setGrade(2024);
+		return student;
+	}
+}
