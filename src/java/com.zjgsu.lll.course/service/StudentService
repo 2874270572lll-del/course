@@ -1,0 +1,52 @@
+package com.zjgsu.lll.course.service;
+
+import com.zjgsu.lll.course.model.Enrollment;
+import com.zjgsu.lll.course.model.Student;
+import com.zjgsu.lll.course.repository.EnrollmentRepository;
+import com.zjgsu.lll.course.repository.StudentRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class StudentService {
+    private final StudentRepository studentRepository;
+    private final EnrollmentRepository enrollmentRepository;  // 新增
+
+    public StudentService(StudentRepository studentRepository, EnrollmentRepository enrollmentRepository) {
+        this.studentRepository = studentRepository;
+        this.enrollmentRepository = enrollmentRepository;  // 新增
+    }
+
+    public List<Student> getAllStudents() { return studentRepository.findAll(); }
+
+    public Student getById(String id) {
+        return studentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+    }
+
+    public Student createStudent(Student student) {
+        studentRepository.findByStudentId(student.getStudentId()).ifPresent(s -> {
+            throw new RuntimeException("Duplicate studentId");
+        });
+        if (!student.getEmail().contains("@"))
+            throw new RuntimeException("Invalid email format");
+        return studentRepository.save(student);
+    }
+
+    public Student updateStudent(String id, Student s) {
+        Student existing = getById(id);
+        s.setId(existing.getId());
+        s.setCreatedAt(existing.getCreatedAt());
+        return studentRepository.save(s);
+    }
+
+    public void deleteStudent(String id) {
+        // 检查是否有选课记录
+        List<Enrollment> enrollments = enrollmentRepository.findByStudentId(id);
+        if (!enrollments.isEmpty()) {
+            throw new RuntimeException("无法删除：该学生存在选课记录");
+        }
+        studentRepository.delete(id);
+    }
+}
