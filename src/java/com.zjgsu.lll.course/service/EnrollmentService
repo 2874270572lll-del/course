@@ -1,0 +1,48 @@
+package com.zjgsu.lll.course.service;
+
+import com.zjgsu.lll.course.model.*;
+import com.zjgsu.lll.course.repository.*;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.UUID;
+
+@Service
+public class EnrollmentService {
+    private final EnrollmentRepository enrollmentRepo;
+    private final CourseRepository courseRepo;
+    private final StudentRepository studentRepo;
+
+    public EnrollmentService(EnrollmentRepository e, CourseRepository c, StudentRepository s) {
+        this.enrollmentRepo = e;
+        this.courseRepo = c;
+        this.studentRepo = s;
+    }
+
+    public Enrollment enroll(String courseId, String studentId) {
+        Course course = courseRepo.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+        Student student = studentRepo.findByStudentId(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+
+        boolean already = enrollmentRepo.findByStudentId(studentId)
+                .stream().anyMatch(e -> e.getCourseId().equals(courseId));
+        if (already) throw new RuntimeException("Duplicate enrollment");
+        if (course.getEnrolled() >= course.getCapacity())
+            throw new RuntimeException("Course full");
+
+        Enrollment e = new Enrollment();
+        e.setId(UUID.randomUUID().toString());
+        e.setCourseId(courseId);
+        e.setStudentId(studentId);
+        enrollmentRepo.save(e);
+
+        course.setEnrolled(course.getEnrolled() + 1);
+        courseRepo.save(course);
+        return e;
+    }
+
+    public List<Enrollment> getAll() { return enrollmentRepo.findAll(); }
+    public List<Enrollment> byCourse(String courseId) { return enrollmentRepo.findByCourseId(courseId); }
+    public List<Enrollment> byStudent(String studentId) { return enrollmentRepo.findByStudentId(studentId); }
+}
